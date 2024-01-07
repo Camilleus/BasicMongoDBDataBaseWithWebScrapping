@@ -22,7 +22,7 @@ def scrape_quotes():
 
         next_button = soup.find('li', class_='next')
         quotes_url = next_button.a['href'] if next_button else None
-        
+
     return all_quotes
 
 def save_to_json(data, filename):
@@ -30,4 +30,8 @@ def save_to_json(data, filename):
         json.dump(data, json_file, ensure_ascii=False, indent=2)
 
 if __name__ == "__main__":
-    main()
+    quotes_data = scrape_quotes()
+    save_to_json(quotes_data, 'quotes.json')
+
+    authors_data = list(set(quote['author'] for quote in quotes_data))
+    save_to_json(authors_data, 'authors.json')
