@@ -2,7 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 import json
 from typing import List
-from mongoengine import connect, disconnect
+from mongoengine import Document, StringField, connect, disconnect
+
 
 class QuoteScraper:
     def __init__(self, base_url: str):
@@ -30,18 +31,40 @@ class QuoteScraper:
 
         return all_quotes
 
+
+class Quote(Document):
+    quote = StringField(required=True)
+    author = StringField(required=True)
+
+
+class Author(Document):
+    name = StringField(required=True)
+
+
 class DataSaver:
     @staticmethod
     def save_to_json(data: List[dict], filename: str):
         with open(filename, 'w', encoding='utf-8') as json_file:
             json.dump(data, json_file, ensure_ascii=False, indent=2)
 
+
 class DatabaseUploader:
     @staticmethod
     def upload_to_mongodb(data: List[dict], connection_uri: str):
         with connect(connection_uri):
-            # TODO: Add logic for uploading to MongoDB
-            pass
+            for quote_info in data:
+                author_name = quote_info["author"]
+                quote_text = quote_info["quote"]
+
+                # Save author to MongoDB
+                author = Author.objects(name=author_name).first()
+                if not author:
+                    author = Author(name=author_name)
+                    author.save()
+
+                # Save quote to MongoDB
+                quote = Quote(quote=quote_text, author=author_name)
+                quote.save()
 
 if __name__ == "__main__":
     base_url = "http://quotes.toscrape.com"
@@ -56,4 +79,4 @@ if __name__ == "__main__":
     except IndexError as e:
         print(f"Error: {e}")
     finally:
-        disconnect()  # Close the MongoDB connection
+        disconnect()
