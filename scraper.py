@@ -16,7 +16,7 @@ class QuoteScraper:
 
         while quotes_url:
             response = requests.get(self.base_url + quotes_url)
-            response.raise_for_status()  # Raise an HTTPError for bad responses
+            response.raise_for_status() 
 
             soup = BeautifulSoup(response.text, 'html.parser')
             quotes = soup.find_all('span', class_='text')
