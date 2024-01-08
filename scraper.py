@@ -9,14 +9,16 @@ class QuoteScraper:
     def __init__(self, base_url: str):
         self.base_url = base_url
 
+
     def scrape_quotes(self, page: int) -> List[dict]:
         quotes_url = f"/page/{page}"
         all_quotes = []
 
         while quotes_url:
             response = requests.get(self.base_url + quotes_url)
-            soup = BeautifulSoup(response.text, 'html.parser')
+            response.raise_for_status()  # Raise an HTTPError for bad responses
 
+            soup = BeautifulSoup(response.text, 'html.parser')
             quotes = soup.find_all('span', class_='text')
             authors = soup.find_all('small', class_='author')
 
@@ -32,6 +34,13 @@ class QuoteScraper:
         return all_quotes
 
 
+class DataSaver:
+    @staticmethod
+    def save_to_json(data: List[dict], filename: str):
+        with open(filename, 'w', encoding='utf-8') as json_file:
+            json.dump(data, json_file, ensure_ascii=False, indent=2)
+
+
 class Quote(Document):
     quote = StringField(required=True)
     author = StringField(required=True)
@@ -39,13 +48,6 @@ class Quote(Document):
 
 class Author(Document):
     name = StringField(required=True)
-
-
-class DataSaver:
-    @staticmethod
-    def save_to_json(data: List[dict], filename: str):
-        with open(filename, 'w', encoding='utf-8') as json_file:
-            json.dump(data, json_file, ensure_ascii=False, indent=2)
 
 
 class DatabaseUploader:
@@ -56,15 +58,14 @@ class DatabaseUploader:
                 author_name = quote_info["author"]
                 quote_text = quote_info["quote"]
 
-                # Save author to MongoDB
                 author = Author.objects(name=author_name).first()
                 if not author:
                     author = Author(name=author_name)
                     author.save()
 
-                # Save quote to MongoDB
                 quote = Quote(quote=quote_text, author=author_name)
                 quote.save()
+
 
 if __name__ == "__main__":
     base_url = "http://quotes.toscrape.com"
@@ -76,7 +77,9 @@ if __name__ == "__main__":
         authors_data = list(set(quote['author'] for quote in quotes_data))
         DataSaver.save_to_json(authors_data, 'authors.json')
         DatabaseUploader.upload_to_mongodb(quotes_data, "mongodb+srv://CamilleusRex:c47UaZGmGSlIR5PB@pythonmongodbv1cluster0.na7ldv4.mongodb.net/?retryWrites=true&w=majority")
-    except IndexError as e:
-        print(f"Error: {e}")
+    except requests.RequestException as e:
+        print(f"Error during request: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
     finally:
         disconnect()
