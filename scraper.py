@@ -5,6 +5,10 @@ from typing import List, Any
 from mongoengine import Document, StringField, connect, disconnect
 from scraper_base import Quote, Author
 
+
+base_url = "http://quotes.toscrape.com"
+
+
 class QuoteScraper:
     def __init__(self, base_url: str):
         self.base_url = base_url
@@ -57,7 +61,6 @@ class DatabaseUploader:
 
 
 if __name__ == "__main__":
-    base_url = "http://quotes.toscrape.com"
     scraper = QuoteScraper(base_url)
 
     try:
