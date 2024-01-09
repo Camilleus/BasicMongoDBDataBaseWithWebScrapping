@@ -23,8 +23,7 @@ class QuoteScraper:
             authors = soup.find_all('small', class_='author')
 
             for quote, author in zip(quotes, authors):
-                quote_text = quote.get_text()
-                author_name = author.get_text()
+                quote_text, author_name = quote.get_text(), author.get_text()
 
                 all_quotes.append({"quote": quote_text, "author": author_name})
 
