@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import json
 from typing import List
 from mongoengine import Document, StringField, connect, disconnect
-
+from scraper_base import Quote, Author
 
 class QuoteScraper:
     def __init__(self, base_url: str):
@@ -38,15 +38,6 @@ class DataSaver:
     def save_to_json(data: List[dict], filename: str):
         with open(filename, 'w', encoding='utf-8') as json_file:
             json.dump(data, json_file, ensure_ascii=False, indent=2)
-
-
-class Quote(Document):
-    quote = StringField(required=True)
-    author = StringField(required=True)
-
-
-class Author(Document):
-    name = StringField(required=True)
 
 
 class DatabaseUploader:
