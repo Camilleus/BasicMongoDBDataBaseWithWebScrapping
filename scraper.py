@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-from typing import List
+from typing import List, Any
 from mongoengine import Document, StringField, connect, disconnect
 from scraper_base import Quote, Author
 
@@ -9,8 +9,7 @@ class QuoteScraper:
     def __init__(self, base_url: str):
         self.base_url = base_url
 
-
-    def scrape_quotes(self, page: int) -> List[dict]:
+    def scrape_quotes(self, page: int) -> List[dict[str, Any]]:
         quotes_url = f"/page/{page}"
         all_quotes = []
 
@@ -35,14 +34,14 @@ class QuoteScraper:
 
 class DataSaver:
     @staticmethod
-    def save_to_json(data: List[dict], filename: str):
+    def save_to_json(data: List[dict[str, Any]], filename: str):
         with open(filename, 'w', encoding='utf-8') as json_file:
             json.dump(data, json_file, ensure_ascii=False, indent=2)
 
 
 class DatabaseUploader:
     @staticmethod
-    def upload_to_mongodb(data: List[dict], connection_uri: str):
+    def upload_to_mongodb(data: List[dict[str, Any]], connection_uri: str):
         with connect(connection_uri):
             for quote_info in data:
                 author_name = quote_info["author"]
